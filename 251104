@@ -1,0 +1,33 @@
+#risc-v test study
+
+##tests contents
+reference source is 
+https://github.com/riscv-software-src/riscv-tests.git
+
+This repository assumes that the riscv-gnu-toolchain package is installed, and the RISCV environment variable is set to the RISCV tools install path.
+
+each test program should include risc_test.h header file, which defines the macro used by the TVM(Test Virtual Machines). 
+
+##riscv-tests/isa/rv64ui/add.S
+```
+#include "riscv_test.h"
+#include "test_macros.h"
+
+RVTEST_RV64U
+RVTEST_CODE_BEGIN
+
+  #-------------------------------------------------------------
+  # Arithmetic tests
+  #-------------------------------------------------------------
+
+  TEST_RR_OP( 2,  add, 0x00000000, 0x00000000, 0x00000000 );
+  TEST_RR_OP( 3,  add, 0x00000002, 0x00000001, 0x00000001 );
+  TEST_RR_OP( 4,  add, 0x0000000a, 0x00000003, 0x00000007 );
+```
+
+it has User-Level TVM ans Supervisor-Level TVMs. 
+i will use user-level and rv32u*, rv64u* stands for user level test programs. 
+rv32ui is my target ISA test program and it is same with rv64ui as assembly test program.
+
+my idea is bring each instruction test .hex and use it
+riscv-test calls gnu toolchain and it compile the test program and make .hex file
