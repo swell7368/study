@@ -6,7 +6,7 @@ def kbkdf_hmac_sha256(key_in: bytes, label: bytes, context: bytes, length: int) 
     NIST SP 800-108 기반의 KBKDF (Counter Mode) 구현체 (HMAC-SHA256 사용)
     - key_in: 최상위 마스터 키 (예: OTP Key)
     - label: 키의 용도를 나타내는 문자열
-    - context: 키 유도에 결합될 부가 정보 (예: 펌웨어 해시 + 기기 UID)
+    - context: 키 유도에 결합될 부가 정보 (예: 펌웨어 해시)
     - length: 도출할 키의 바이트 길이 (예: 32바이트 = 256비트)
     """
     derived_key = b""
@@ -37,14 +37,12 @@ def main():
     # 1. 초기 데이터 셋업 (Provisioning & Build Time)
     # ---------------------------------------------------------
     global_otp_key   = bytes.fromhex("99FF887766554433221100AABBCCDDEEFF99887766554433221100AABBCCDDEE")
-    device_uid       = bytes.fromhex("1234ABCD5678EF90")
     fw_code          = b"B80000008ED88EC0E801000000E9452301"
     global_fw_salt   = bytes.fromhex("A1B2C3D4E5F60718293A4B5C6D7E8F90A1B2C3D4E5F60718293A4B5C6D7E8F90")
 
     print(f"[Setup]")
-    print(f"  OTP Key    : {global_otp_key.hex().upper()}")
-    print(f"  Device UID : {device_uid.hex().upper()}")
-    print(f"  FW Salt    : {global_fw_salt.hex().upper()}\n")
+    print(f"  OTP Key : {global_otp_key.hex().upper()}")
+    print(f"  FW Salt : {global_fw_salt.hex().upper()}\n")
 
     # ---------------------------------------------------------
     # 2. Bootloader 단계: 펌웨어 측정 (Hash Computation)
@@ -60,7 +58,7 @@ def main():
     # 3. KBKDF 단계: 최종 Wrapping Key 도출
     # ---------------------------------------------------------
     print("[2] KBKDF를 이용한 Wrapping Key 도출...")
-    kdf_context = fw_hash + device_uid
+    kdf_context = fw_hash
     kdf_label   = b"SECURE_BOOT_WRAPPING_KEY"
 
     wrapping_key = kbkdf_hmac_sha256(
@@ -84,7 +82,7 @@ def main():
     hacked_wrapping_key = kbkdf_hmac_sha256(
         key_in=global_otp_key,
         label=kdf_label,
-        context=hacked_fw_hash + device_uid,
+        context=hacked_fw_hash,
         length=32
     )
 
